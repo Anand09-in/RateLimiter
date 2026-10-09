@@ -6,8 +6,9 @@ COPY go.mod ./
 COPY . .
 RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -o /rate-limiter-core ./cmd/server
 
-FROM builder AS test
-RUN apk --no-cache add gcc musl-dev
+FROM golang:1.22 AS test
+WORKDIR /app
+COPY --from=builder /app /app
 # REDIS_ADDR is injected at runtime via --env
 CMD ["go", "test", "-race", "-v", "-count=1", "./internal/algorithms/..."]
 

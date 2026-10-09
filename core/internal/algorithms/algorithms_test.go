@@ -3,6 +3,7 @@ package algorithms
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 
@@ -11,7 +12,11 @@ import (
 
 func newTestRedis(t *testing.T) *redis.Client {
 	t.Helper()
-	rdb := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+	addr := os.Getenv("REDIS_ADDR")
+	if addr == "" {
+		addr = "localhost:6379"
+	}
+	rdb := redis.NewClient(&redis.Options{Addr: addr})
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		t.Skipf("redis not available: %v", err)
 	}

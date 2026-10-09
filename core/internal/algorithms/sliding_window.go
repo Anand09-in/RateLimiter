@@ -43,9 +43,10 @@ func (s *SlidingWindow) Check(ctx context.Context, rdb *redis.Client, clientID, 
 		return false, 0, retryMs
 	}
 
-	nowStr := fmt.Sprintf("%d", nowMs)
+	// Use nanoseconds as unique member so same-ms requests don't deduplicate
+	member := fmt.Sprintf("%d", time.Now().UnixNano())
 	pipe2 := rdb.Pipeline()
-	pipe2.ZAdd(ctx, key, redis.Z{Score: float64(nowMs), Member: nowStr})
+	pipe2.ZAdd(ctx, key, redis.Z{Score: float64(nowMs), Member: member})
 	pipe2.Expire(ctx, key, time.Duration(windowSecs*2)*time.Second)
 	pipe2.Exec(ctx) //nolint:errcheck
 
