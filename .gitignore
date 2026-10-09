@@ -1,0 +1,36 @@
+# Environment
+.env
+*.env
+
+# Go
+rate-limiter/core/vendor/
+rate-limiter/core/bin/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+rate-limiter/admin/.venv/
+
+# Terraform
+rate-limiter/infra/terraform/.terraform/
+rate-limiter/infra/terraform/*.tfstate
+rate-limiter/infra/terraform/*.tfstate.backup
+rate-limiter/infra/terraform/.terraform.lock.hcl
+
+# Test reports
+rate-limiter/tests/reports/*.csv
+rate-limiter/tests/reports/*.html
+rate-limiter/tests/keys.json
+
+# Docker
+rate-limiter/core/rate-limiter-core
+
+# OS
+.DS_Store
+Thumbs.db
+
+#plan
+plan.md
