@@ -11,11 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/atharvanand/rate-limiter/core/internal/algorithms"
-	"github.com/atharvanand/rate-limiter/core/internal/cache"
-	"github.com/atharvanand/rate-limiter/core/internal/handlers"
-	"github.com/atharvanand/rate-limiter/core/internal/metrics"
-	"github.com/atharvanand/rate-limiter/core/internal/middleware"
+	"github.com/Anand09-in/RateLimiter/core/internal/algorithms"
+	"github.com/Anand09-in/RateLimiter/core/internal/cache"
+	"github.com/Anand09-in/RateLimiter/core/internal/handlers"
+	"github.com/Anand09-in/RateLimiter/core/internal/metrics"
+	"github.com/Anand09-in/RateLimiter/core/internal/middleware"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -76,7 +76,7 @@ func main() {
 		}
 	}()
 
-	tb := &algorithms.TokenBucket{}
+	tb := algorithms.NewTokenBucket()
 	if err := tb.LoadScript(ctx, rdb); err != nil {
 		slog.Warn("token bucket script load failed", "error", err)
 	}

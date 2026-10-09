@@ -1,5 +1,3 @@
-version: "3.9"
-
 networks:
   rl-net:
     driver: bridge

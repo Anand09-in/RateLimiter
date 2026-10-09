@@ -2,12 +2,10 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from .database import get_db, engine
-from .models import Base, AuditLog
+from .database import get_db
+from .models import AuditLog
 from .schemas import AuditLogOut
 from .routes import rules, clients
-
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Rate Limiter Admin API")
 

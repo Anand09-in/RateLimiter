@@ -1,4 +1,4 @@
-module github.com/atharvanand/rate-limiter/core
+module github.com/Anand09-in/RateLimiter/core
 
 go 1.22
 

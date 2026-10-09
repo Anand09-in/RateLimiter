@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/atharvanand/rate-limiter/core/internal/cache"
+	"github.com/Anand09-in/RateLimiter/core/internal/cache"
 )
 
 type contextKey string

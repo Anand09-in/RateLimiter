@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/atharvanand/rate-limiter/core/internal/algorithms"
-	"github.com/atharvanand/rate-limiter/core/internal/cache"
-	"github.com/atharvanand/rate-limiter/core/internal/metrics"
-	"github.com/atharvanand/rate-limiter/core/internal/middleware"
+	"github.com/Anand09-in/RateLimiter/core/internal/algorithms"
+	"github.com/Anand09-in/RateLimiter/core/internal/cache"
+	"github.com/Anand09-in/RateLimiter/core/internal/metrics"
+	"github.com/Anand09-in/RateLimiter/core/internal/middleware"
 	"github.com/redis/go-redis/v9"
 )
 
