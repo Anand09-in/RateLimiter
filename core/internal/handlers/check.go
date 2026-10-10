@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -83,6 +84,13 @@ func (h *CheckHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	duration := time.Since(start)
 	metrics.RequestsTotal.WithLabelValues(client.ID, rule.Algorithm, result).Inc()
 	metrics.CheckDuration.WithLabelValues(rule.Algorithm).Observe(duration.Seconds())
+
+	slog.Info("check",
+		"client_id", client.ID,
+		"algorithm", rule.Algorithm,
+		"allowed", allowed,
+		"duration_ms", duration.Milliseconds(),
+	)
 
 	statusCode := http.StatusOK
 	if !allowed {

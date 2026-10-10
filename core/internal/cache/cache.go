@@ -109,11 +109,16 @@ func (c *RuleCache) StartRefresh(ctx context.Context, db *sql.DB, interval time.
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
+				t0 := time.Now()
 				if err := c.Refresh(db); err != nil {
 					slog.Warn("cache refresh failed, keeping stale cache", "error", err)
 				} else {
 					c.mu.RLock()
-					slog.Info("cache refreshed", "rules", len(c.rules), "clients", len(c.clients))
+					slog.Info("cache refreshed",
+						"rules_count", len(c.rules),
+						"clients_count", len(c.clients),
+						"duration_ms", time.Since(t0).Milliseconds(),
+					)
 					c.mu.RUnlock()
 				}
 			}
