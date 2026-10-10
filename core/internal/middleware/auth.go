@@ -19,7 +19,7 @@ func Auth(c *cache.RuleCache) func(http.Handler) http.Handler {
 			if apiKey == "" {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(map[string]string{"error": "missing api key"})
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": "missing api key"})
 				return
 			}
 
@@ -27,7 +27,7 @@ func Auth(c *cache.RuleCache) func(http.Handler) http.Handler {
 			if !ok || !client.IsActive {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(map[string]string{"error": "invalid api key"})
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid api key"})
 				return
 			}
 

@@ -1,10 +1,10 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 
-from ..database import get_db
-from ..models import Rule, AuditLog
-from ..schemas import RuleCreate, RuleUpdate, RuleOut
+from fastapi import APIRouter, HTTPException
+
+from ..database import DbDep
+from ..models import AuditLog, Rule
+from ..schemas import RuleCreate, RuleOut, RuleUpdate
 
 router = APIRouter(prefix="/rules", tags=["rules"])
 
@@ -21,7 +21,7 @@ def _rule_dict(rule: Rule) -> dict:
     }
 
 
-def _audit(db: Session, action: str, rule: Rule, before: dict | None, after: dict | None):
+def _audit(db, action: str, rule: Rule, before: dict | None, after: dict | None):
     db.add(AuditLog(
         action=action,
         entity_type="rule",
@@ -31,7 +31,7 @@ def _audit(db: Session, action: str, rule: Rule, before: dict | None, after: dic
 
 
 @router.post("", response_model=RuleOut, status_code=201)
-def create_rule(body: RuleCreate, db: Session = Depends(get_db)):
+def create_rule(body: RuleCreate, db: DbDep = None):
     rule = Rule(**body.model_dump())
     db.add(rule)
     db.flush()
@@ -42,12 +42,20 @@ def create_rule(body: RuleCreate, db: Session = Depends(get_db)):
 
 
 @router.get("", response_model=list[RuleOut])
-def list_rules(db: Session = Depends(get_db)):
+def list_rules(db: DbDep = None):
     return db.query(Rule).filter(Rule.is_active == True).all()
 
 
+@router.get("/{rule_id}", response_model=RuleOut)
+def get_rule(rule_id: UUID, db: DbDep = None):
+    rule = db.query(Rule).filter(Rule.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="rule not found")
+    return rule
+
+
 @router.put("/{rule_id}", response_model=RuleOut)
-def update_rule(rule_id: UUID, body: RuleUpdate, db: Session = Depends(get_db)):
+def update_rule(rule_id: UUID, body: RuleUpdate, db: DbDep = None):
     rule = db.query(Rule).filter(Rule.id == rule_id, Rule.is_active == True).first()
     if not rule:
         raise HTTPException(status_code=404, detail="rule not found")
@@ -62,7 +70,7 @@ def update_rule(rule_id: UUID, body: RuleUpdate, db: Session = Depends(get_db)):
 
 
 @router.delete("/{rule_id}", status_code=204)
-def delete_rule(rule_id: UUID, db: Session = Depends(get_db)):
+def delete_rule(rule_id: UUID, db: DbDep = None):
     rule = db.query(Rule).filter(Rule.id == rule_id, Rule.is_active == True).first()
     if not rule:
         raise HTTPException(status_code=404, detail="rule not found")

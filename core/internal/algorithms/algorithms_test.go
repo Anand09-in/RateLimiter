@@ -2,7 +2,6 @@ package algorithms
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sync"
 	"testing"
@@ -147,7 +146,7 @@ func TestTokenBucket_NoConcurrentRaceCondition(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			allowed, _, _ := tb.Check(ctx, rdb,
-				"test-race", fmt.Sprintf("/test-%d", id%1), // same key
+				"test-race", "/test-race", // same key
 				capacity, 1, 3600)
 			if allowed {
 				mu.Lock()

@@ -1,8 +1,8 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 config = context.config
 
@@ -13,7 +13,8 @@ if config.config_file_name is not None:
 db_url = os.getenv("DATABASE_URL", "postgresql+psycopg2://rluser:rlpass@localhost:5432/ratelimiter")
 config.set_main_option("sqlalchemy.url", db_url)
 
-from app.models import Base  # noqa: E402
+from app.models import Base
+
 target_metadata = Base.metadata
 
 

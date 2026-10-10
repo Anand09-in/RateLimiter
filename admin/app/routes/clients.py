@@ -1,10 +1,10 @@
 import secrets
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 
-from ..database import get_db
-from ..models import Client, AuditLog
+from fastapi import APIRouter, HTTPException
+
+from ..database import DbDep
+from ..models import AuditLog, Client
 from ..schemas import ClientCreate, ClientOut
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -21,7 +21,7 @@ def _client_dict(c: Client) -> dict:
     }
 
 
-def _audit(db: Session, action: str, client: Client, before: dict | None, after: dict | None):
+def _audit(db, action: str, client: Client, before: dict | None, after: dict | None):
     db.add(AuditLog(
         action=action,
         entity_type="client",
@@ -31,7 +31,7 @@ def _audit(db: Session, action: str, client: Client, before: dict | None, after:
 
 
 @router.post("", response_model=ClientOut, status_code=201)
-def create_client(body: ClientCreate, db: Session = Depends(get_db)):
+def create_client(body: ClientCreate, db: DbDep = None):
     client = Client(**body.model_dump(), api_key=secrets.token_urlsafe(32))
     db.add(client)
     db.flush()
@@ -42,12 +42,12 @@ def create_client(body: ClientCreate, db: Session = Depends(get_db)):
 
 
 @router.get("", response_model=list[ClientOut])
-def list_clients(db: Session = Depends(get_db)):
+def list_clients(db: DbDep = None):
     return db.query(Client).filter(Client.is_active == True).all()
 
 
 @router.get("/{client_id}", response_model=ClientOut)
-def get_client(client_id: UUID, db: Session = Depends(get_db)):
+def get_client(client_id: UUID, db: DbDep = None):
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="client not found")
@@ -55,7 +55,7 @@ def get_client(client_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.delete("/{client_id}", status_code=204)
-def delete_client(client_id: UUID, db: Session = Depends(get_db)):
+def delete_client(client_id: UUID, db: DbDep = None):
     client = db.query(Client).filter(Client.id == client_id, Client.is_active == True).first()
     if not client:
         raise HTTPException(status_code=404, detail="client not found")

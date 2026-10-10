@@ -1,6 +1,7 @@
-from typing import Literal, Optional
-from uuid import UUID
 from datetime import datetime
+from typing import Literal
+from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 
@@ -13,11 +14,11 @@ class RuleCreate(BaseModel):
 
 
 class RuleUpdate(BaseModel):
-    name: Optional[str] = None
-    algorithm: Optional[Literal["fixed", "sliding", "token"]] = None
-    limit_count: Optional[int] = Field(default=None, gt=0)
-    window_secs: Optional[int] = Field(default=None, gt=0)
-    endpoint: Optional[str] = None
+    name: str | None = None
+    algorithm: Literal["fixed", "sliding", "token"] | None = None
+    limit_count: int | None = Field(default=None, gt=0)
+    window_secs: int | None = Field(default=None, gt=0)
+    endpoint: str | None = None
 
 
 class RuleOut(BaseModel):
@@ -37,7 +38,7 @@ class RuleOut(BaseModel):
 class ClientCreate(BaseModel):
     name: str
     rule_id: UUID
-    custom_limit: Optional[int] = Field(default=None, gt=0)
+    custom_limit: int | None = Field(default=None, gt=0)
 
 
 class ClientOut(BaseModel):
@@ -45,7 +46,7 @@ class ClientOut(BaseModel):
     name: str
     api_key: str
     rule_id: UUID
-    custom_limit: Optional[int]
+    custom_limit: int | None
     is_active: bool
     created_at: datetime
 

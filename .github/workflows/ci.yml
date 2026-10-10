@@ -115,6 +115,9 @@ jobs:
           pip install requests -q
           python tests/seed.py
 
+      - name: Wait for cache refresh
+        run: sleep 35  # core service refreshes rule cache every 30s
+
       - name: Smoke test /check
         run: |
           KEY=$(python -c "import json; print(json.load(open('tests/keys.json'))['fixed'])")
