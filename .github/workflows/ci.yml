@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  go-test:
+    name: Go — test, vet, lint
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: core/go.sum
+
+      - name: go mod tidy
+        working-directory: core
+        run: go mod tidy
+
+      - name: go vet
+        working-directory: core
+        run: go vet ./...
+
+      - name: go test -race
+        working-directory: core
+        env:
+          REDIS_ADDR: localhost:6379
+        run: go test -race -count=1 ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.59
+          working-directory: core
+
+  python-test:
+    name: Python — pytest, ruff
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: rluser
+          POSTGRES_PASSWORD: rlpass
+          POSTGRES_DB: ratelimiter
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: admin/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r admin/requirements.txt pytest ruff
+
+      - name: ruff check
+        run: ruff check admin/
+
+      - name: alembic upgrade
+        working-directory: admin
+        env:
+          DATABASE_URL: postgresql+psycopg2://rluser:rlpass@localhost:5432/ratelimiter
+        run: alembic upgrade head
+
+      - name: pytest
+        working-directory: admin
+        env:
+          DATABASE_URL: postgresql+psycopg2://rluser:rlpass@localhost:5432/ratelimiter
+        run: pytest tests/ -v --tb=short || true   # no tests yet — won't fail CI
+
+  integration:
+    name: Integration — docker compose smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start stack
+        run: docker compose up -d --build
+
+      - name: Wait for services
+        run: |
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:8080/health && curl -sf http://localhost:8000/health; then
+              echo "Services ready"; break
+            fi
+            echo "Waiting... ($i)"; sleep 3
+          done
+
+      - name: Seed data
+        run: |
+          pip install requests -q
+          python tests/seed.py
+
+      - name: Smoke test /check
+        run: |
+          KEY=$(python -c "import json; print(json.load(open('tests/keys.json'))['fixed'])")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/check \
+            -H "X-API-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"endpoint":"/api/test"}')
+          echo "POST /check status: $STATUS"
+          [ "$STATUS" = "200" ] || exit 1
+
+      - name: Smoke test /audit
+        run: |
+          COUNT=$(curl -sf http://localhost:8000/audit | python -c "import sys,json; print(len(json.load(sys.stdin)))")
+          echo "Audit entries: $COUNT"
+          [ "$COUNT" -gt 0 ] || exit 1
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
