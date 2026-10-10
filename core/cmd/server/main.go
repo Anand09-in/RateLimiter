@@ -87,7 +87,7 @@ func main() {
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}).Methods(http.MethodGet)
 
 	checkHandler := handlers.NewCheckHandler(ruleCache, rdb, tb)
